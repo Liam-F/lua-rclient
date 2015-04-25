@@ -1,0 +1,42 @@
+<html>
+<head>
+<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+<script type="text/javascript" src="jquery-1.11.2.min.js"></script>
+</head>
+<body>
+<h3>Sample Nginx RApi</h3>
+<div id="input">
+    <select id="operation">
+        <option value="calc">Calculator</option>
+        <option value="deriv">Derivative</option>
+    </select> 
+    <br><br>
+    <span>Please enter your expression and click Value</span>
+    <br><br>
+    <input id="expression" type="text" value="1+2" onkeydown="if (event.keyCode == 13) doValue()" />
+    <button id="valueBtn" onclick="doValue()">Value</button>
+</div>
+<br><br>
+<div id="output"></div>
+
+      
+<script type="text/javascript">
+function doValue() {
+    var url = "http://localhost:8080/rapi/" + $("#operation").val() + "/" + $("#expression").val();
+    $.get(url, function (data) {
+        //[How do I replace all line breaks in a string with <br /> tags?](http://stackoverflow.com/questions/784539/how-do-i-replace-all-line-breaks-in-a-string-with-br-tags)
+        $("#output").html(data.replace(/(?:\r\n|\r|\n)/g, '<br />'));
+    });
+}
+</script> 
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+</body>
+</html>
