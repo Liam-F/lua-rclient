@@ -4,6 +4,9 @@ title: Nginx RApi
 comments: true
 ---
 
+I put [Lua Rclient Library for Nginx and complete setup at GitHub repository for your convenience](https://github.com/systematicinvestor/lua-rclient/blob/master/nginx.zip)
+
+
 I want to share a very simple and light way to setup custom api to R functions using [Nginx server](http://wiki.nginx.org/Main)
 
 There are of course more complete solutions available, for example using:
@@ -27,7 +30,7 @@ I want to design following API:
 
 First, let's create a [Nginx configuration](http://wiki.nginx.org/Main) in `conf\nginx.conf` file:
 
-```
+{% highlight nginx %}
 # These three directives should be tweaked for production
 error_log stderr notice;
 daemon off;
@@ -59,11 +62,11 @@ http {
 		}
 	}
 }
-```
+{% endhighlight %}
 
 Next we need to process `http://localhost:8080/rapi` R API requests in the `lualibs/serve_rapi.lua` file:
 
-```{lua}
+{% highlight lua %}
 local program, param =
 ngx.var.program, ngx.var.param
 
@@ -110,15 +113,15 @@ ngx.header["Content-Type"] = "text/plain"
 ngx.say("param: " .. param)
 ngx.say("result: " .. res)
 ngx.exit(0)
-```
+{% endhighlight %}
 
 Now it is time to run a first test. 
 
 Please start Rserve, following the example from [Lua Rclient Library](http://www.scilua.org/rclient.html)
-```{r}
+{% highlight r %}
 library("Rserve")
 Rserve(args="--no-save")
-```
+{% endhighlight %}
 
 I usually start Rserve with a batch file:
 `Rterm.exe -e "library('Rserve');Rserve(args='--no-save')"`
@@ -130,7 +133,7 @@ Next, start [Nginx server](http://wiki.nginx.org/Main) and try following URL in 
 
 Now we can setup a simple html page to access above RAPI:
 
-```{html}
+{% highlight html %}
 <html>
 <head>
 <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
@@ -165,7 +168,7 @@ function doValue() {
 <br>
 </body>
 </html>
-```
+{% endhighlight %}
 
 This page can be accessed by going to `http://localhost/`
 
@@ -204,7 +207,7 @@ Following are sample tutorials:
 
 For example you can try following script
 
-```{lua}
+{% highlight lua %}
 local R = require "rclient"
   
 local r = R.connect()
@@ -221,7 +224,7 @@ r "text1" --> [1] 3
 r "text2" --> [1] x + x
 
 local status = r.disconnect
-```
+{% endhighlight %}
 
 
 You might also want to try LuaJIT:
