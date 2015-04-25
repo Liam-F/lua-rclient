@@ -16,19 +16,43 @@
 
 local ffi  = require "ffi"
 local bit  = require "bit"
-local xsys = require "xsys"
-local sok  = require "socket"
+--local sok  = require "socket"
+local sok  = require "rclient.socket" 
+
 
 if not ffi.abi("le") then
   error("NYI: only little endian architectures are supported")
 end
 
-local split, trim = xsys.string.split, xsys.string.trim
 local br = bit.rshift
 local bl = bit.lshift
 local bo = bit.bor
 local ba = bit.band
 local tobit = bit.tobit
+
+-- String ----------------------------------------------------------------------
+-- CREDIT: Steve Dovan snippet.
+-- TODO: Clarify corner cases, make more robust.
+local function split(s, re)
+  local i1, ls = 1, { }
+  if not re then re = '%s+' end
+  if re == '' then return { s } end
+  while true do
+    local i2, i3 = s:find(re, i1)
+    if not i2 then
+      local last = s:sub(i1)
+      if last ~= '' then table.insert(ls, last) end
+      if #ls == 1 and ls[1] == '' then
+        return  { }
+      else
+        return ls
+      end
+    end
+    table.insert(ls, s:sub(i1, i2 - 1))
+    i1 = i3 + 1
+  end
+end
+
 
 local function rerr(code, msg)
   error("R["..code.."]: "..tostring(msg))
@@ -442,7 +466,7 @@ end
 
 xt_decode[XT.ARRAY_STR] = function(s)
   -- Removes padding, and split over \0.
-  return xsys.string.split(s:gsub(string.char(01),''), '%z')
+  return split(s:gsub(string.char(01),''), '%z')
 end
 
 xt_decode[XT.ARRAY_BOOL] = function(s)
@@ -586,7 +610,9 @@ local rconn_mt = {}
 
 function rconn_mt:__call(s, out)
   out = out or print
+  
   local sp = split(s, "\n")
+  
   for i=1,#sp do
     local caps = 'capture.output('..sp[i]..')'
     local o = try_eval(self._sconn, caps)
@@ -668,6 +694,12 @@ local function tolua(self, k)
 end
 
 function rconn_mt:__index(k)
+  if k == "disconnect" then
+  	local sock = self._sconn
+	self._sconn = nil
+    return sock:close()
+  end
+  
   return tolua(self, k)
 end
 
@@ -690,9 +722,13 @@ function rconn_mt:__newindex(k, v)
 end
 
 connect = function(address, port)
-  address = address or "localhost"
+  --address = address or "localhost"
+  address = address or "127.0.0.1"
+  
   port = port or 6311
-  local sconn, serr = sok.connect(address, port)
+  --local sconn, serr = sok.connect(address, port)
+  local sconn = sok.tcp()
+  local temp, serr = sconn:connect(address, port)
   if not sconn then
     error(serr)
   end
